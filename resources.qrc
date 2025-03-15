@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>UI/Assets/extensions.svg</file>
+        <file>UI/Assets/folder.svg</file>
+        <file>UI/Assets/search.svg</file>
+        <file>UI/Assets/settings.svg</file>
+        <file>main.qml</file>
+        <file>UI/Assets/icon.png</file>
+        <file>TopMenu.qml</file>
+        <file>UI/Assets/git.svg</file>
+        <file>UI/Assets/file.svg</file>
+    </qresource>
+</RCC>
