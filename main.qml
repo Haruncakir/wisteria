@@ -10,12 +10,8 @@ Window {
     width: Screen.width * 0.8
     height: Screen.height * 0.8
     visible: true
-    title: qsTr("Hello World")
+    title: qsTr("Wisteria")
     color: "#1e1e2e"
-
-    // State properties for file explorer
-    property bool explorerVisible: false
-    property string currentFolder: ""
 
     // Top Menu Bar
     Rectangle {
@@ -34,12 +30,52 @@ Window {
                 width: menuBar.height - 5
                 height: menuBar.height - 5
             }
-            Text {
+
+            // Menu items
+            Button {
                 text: "File"
-                color: "#d9d9d9"
-                font.pixelSize: 13
-                font.family: "JetBrains Mono Nerd Font"
+                flat: true
+                contentItem: Text {
+                    text: parent.text
+                    color: "#d9d9d9"
+                    font.pixelSize: 13
+                    font.family: "JetBrains Mono Nerd Font"
+                }
+                onClicked: fileMenu.open()
+
+                Menu {
+                    id: fileMenu
+
+                    MenuItem {
+                        text: "New File"
+                        onTriggered: newFileDialog.open()
+                    }
+
+                    MenuItem {
+                        text: "Open Folder"
+                        onTriggered: folderDialog.open()
+                    }
+
+                    MenuItem {
+                        text: "Save"
+                        enabled: fileManager.activeFileIndex >= 0
+                        onTriggered: fileManager.saveFile(fileManager.activeFileIndex)
+                    }
+
+                    MenuItem {
+                        text: "Save As"
+                        enabled: fileManager.activeFileIndex >= 0
+                        onTriggered: saveAsDialog.open()
+                    }
+
+                    MenuItem {
+                        text: "Close File"
+                        enabled: fileManager.activeFileIndex >= 0
+                        onTriggered: fileManager.closeFile(fileManager.activeFileIndex)
+                    }
+                }
             }
+
             Text {
                 text: "Edit"
                 color: "#d9d9d9"
@@ -125,7 +161,7 @@ Window {
                         anchors.verticalCenter: parent.verticalCenter
                     }
                     onClicked: {
-                        root.explorerVisible = !root.explorerVisible
+                        fileManager.explorerVisible = !fileManager.explorerVisible
                     }
                 }
 
@@ -188,15 +224,45 @@ Window {
             }
         }
 
+        // Dialogs
         FolderDialog {
             id: folderDialog
             title: "Select a folder"
             onAccepted: {
                 console.log("Selected folder: ", selectedFolder)
-                root.currentFolder = selectedFolder
+                fileManager.currentFolder = selectedFolder
             }
             onRejected: {
                 console.log("Folder selection canceled.")
+            }
+        }
+
+        FileDialog {
+            id: saveAsDialog
+            title: "Save As"
+            fileMode: FileDialog.SaveFile
+            onAccepted: {
+                fileManager.saveFileAs(fileManager.activeFileIndex, selectedFile)
+            }
+        }
+
+        Dialog {
+            id: newFileDialog
+            title: "New File"
+            standardButtons: Dialog.Ok | Dialog.Cancel
+
+            ColumnLayout {
+                TextField {
+                    id: newFileNameField
+                    placeholderText: "Enter file name"
+                    Layout.fillWidth: true
+                }
+            }
+
+            onAccepted: {
+                if (newFileNameField.text.trim() !== "") {
+                    fileManager.createNewFile(newFileNameField.text)
+                }
             }
         }
 
@@ -212,10 +278,10 @@ Window {
             // File Explorer Panel
             Rectangle {
                 id: fileExplorerPanel
-                SplitView.preferredWidth: root.explorerVisible ? 250 : 0
+                SplitView.preferredWidth: fileManager.explorerVisible ? 250 : 0
                 SplitView.minimumWidth: 0
                 SplitView.maximumWidth: root.width * 0.3
-                visible: root.explorerVisible
+                visible: fileManager.explorerVisible
                 color: "#252535"
 
                 ColumnLayout {
@@ -248,7 +314,7 @@ Window {
                         Rectangle {
                             anchors.fill: parent
                             color: "transparent"
-                            visible: root.currentFolder === ""
+                            visible: fileManager.currentFolder === ""
 
                             Column {
                                 anchors.centerIn: parent
@@ -274,12 +340,12 @@ Window {
                         ListView {
                             id: fileListView
                             anchors.fill: parent
-                            visible: root.currentFolder !== ""
+                            visible: fileManager.currentFolder !== ""
                             clip: true
 
                             model: FolderListModel {
                                 id: folderModel
-                                folder: root.currentFolder !== "" ? root.currentFolder : ""
+                                folder: fileManager.currentFolder !== "" ? fileManager.currentFolder : ""
                                 showDirs: true
                                 showDotAndDotDot: false
                                 sortField: FolderListModel.Name
@@ -314,10 +380,11 @@ Window {
                                     onClicked: {
                                         if (fileIsDir) {
                                             // Navigate to subfolder
-                                            root.currentFolder = fileURL.toString().slice(7) // Remove "file://"
+                                            fileManager.currentFolder = fileURL.toString().slice(7) // Remove "file://"
                                         } else {
-                                            // TODO: Open file (would implement file opening logic here)
-                                            console.log("Opening file:", fileName)
+                                            // Open File
+                                            var fullPath = fileManager.currentFolder + "/" + fileName
+                                            fileManager.openFile(fullPath.toString().slice(8))
                                         }
                                     }
                                 }
@@ -334,13 +401,211 @@ Window {
                 SplitView.minimumWidth: 100
                 color: "#1e1e2e"
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "Main Content Area"
-                    color: "#ffffff"
-                    font.pixelSize: 16
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 0
+
+                    // Tab Bar for opened files
+                    Rectangle {
+                        id: tabBar
+                        Layout.fillWidth: true
+                        height: 36
+                        color: "#252535"
+                        visible: fileManager.openFiles.length > 0
+
+                        ScrollView {
+                            anchors.fill: parent
+                            ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+                            ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+                            clip: true
+
+                            Row {
+                                id: tabsRow
+                                height: parent.height
+                                spacing: 0
+
+                                // Generate tabs for each open file
+                                Repeater {
+                                    model: fileManager.openFiles
+
+                                    Rectangle {
+                                        id: tabRect
+                                        width: tabText.width + 50
+                                        height: tabBar.height
+                                        color: index === fileManager.activeFileIndex ? "#1e1e2e" : "#252535"
+                                        border.width: 0
+
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            anchors.leftMargin: 10
+                                            anchors.rightMargin: 10
+                                            spacing: 5
+
+                                            Image {
+                                                Layout.preferredWidth: 16
+                                                Layout.preferredHeight: 16
+                                                source: "qrc:/UI/Assets/file.svg"
+                                            }
+
+                                            Text {
+                                                id: tabText
+                                                text: modelData
+                                                color: "#ffffff"
+                                                elide: Text.ElideRight
+                                                Layout.fillWidth: true
+                                            }
+
+                                            // Unsaved indicator
+                                            Rectangle {
+                                                visible: fileManager.isFileDirty(index)
+                                                width: 8
+                                                height: 8
+                                                radius: 4
+                                                color: "#55aaff"
+                                            }
+
+                                            Button {
+                                                Layout.preferredWidth: 20
+                                                Layout.preferredHeight: 20
+                                                flat: true
+                                                text: "×"
+                                                font.pixelSize: 16
+                                                onClicked: {
+                                                    // Close this tab using FileManager
+                                                    fileManager.closeFile(index)
+                                                }
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                fileManager.activeFileIndex = index
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // File content area
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        color: "#1e1e2e"
+
+                        // Welcome screen when no files are open
+                        Item {
+                            anchors.fill: parent
+                            visible: fileManager.openFiles.length === 0
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 20
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "Welcome to Wisteria"
+                                    color: "#ffffff"
+                                    font.pixelSize: 24
+                                    font.bold: true
+                                    visible: fileManager.currentFolder === ""
+                                }
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "Open a folder to get started"
+                                    color: "#cccccc"
+                                    font.pixelSize: 16
+                                    visible: fileManager.currentFolder === ""
+                                }
+
+                                Button {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "Open Folder"
+                                    visible: fileManager.currentFolder === ""
+                                    onClicked: {
+                                        folderDialog.open()
+                                    }
+                                }
+                            }
+                        }
+
+                        // Stack of editors for open files
+                        StackLayout {
+                            anchors.fill: parent
+                            currentIndex: fileManager.activeFileIndex
+                            visible: fileManager.openFiles.length > 0
+
+                            Repeater {
+                                model: fileManager.openFiles
+
+                                TextArea {
+                                    text: fileManager.getFileContent(index)
+                                    color: "#ffffff"
+                                    font.family: "JetBrains Mono Nerd Font"
+                                    font.pixelSize: 14
+                                    wrapMode: TextEdit.NoWrap
+                                    background: Rectangle {
+                                        color: "#1e1e2e"
+                                    }
+
+                                    // Line numbers
+                                    property int lineNumbersWidth: 40
+                                    leftPadding: lineNumbersWidth + 10
+
+                                    // Line numbers background
+                                    Rectangle {
+                                        width: parent.lineNumbersWidth
+                                        height: parent.height
+                                        color: "#252535"
+                                        anchors.left: parent.left
+                                    }
+
+                                    // Monitor content changes
+                                    onTextChanged: {
+                                        if (index === fileManager.activeFileIndex) {
+                                            fileManager.setFileContent(index, text)
+                                        }
+                                    }
+
+                                    // Keyboard shortcuts
+                                    Keys.onPressed: function(event) {
+                                        // Ctrl+S for save
+                                        if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_S) {
+                                            fileManager.saveFile(fileManager.activeFileIndex)
+                                            event.accepted = true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+
+    // Error notification
+    Connections {
+        target: fileManager
+        function onErrorOccurred(error) {
+            errorDialog.text = error
+            errorDialog.open()
+        }
+    }
+
+    Dialog {
+        id: errorDialog
+        title: "Error"
+        property string text: ""
+
+        Label {
+            text: errorDialog.text
+            wrapMode: Text.Wrap
+        }
+
+        standardButtons: Dialog.Ok
     }
 }
