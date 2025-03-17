@@ -9,5 +9,7 @@
         <file>TopMenu.qml</file>
         <file>UI/Assets/git.svg</file>
         <file>UI/Assets/file.svg</file>
+        <file>imports/CustomComponents/qmldir</file>
+        <file>imports/CustomComponents/ThemeSettings.qml</file>
     </qresource>
 </RCC>

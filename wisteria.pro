@@ -3,7 +3,8 @@ QT += quick
 SOURCES += \
         filemanager.cpp \
         main.cpp \
-        textdocument.cpp
+        textdocument.cpp \
+        theme.cpp
 
 resources.files = main.qml 
 resources.prefix = /$${TARGET}
@@ -23,4 +24,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     filemanager.h \
-    textdocument.h
+    textdocument.h \
+    theme.h

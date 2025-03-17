@@ -11,14 +11,24 @@ Window {
     height: Screen.height * 0.8
     visible: true
     title: qsTr("Wisteria")
-    color: "#1e1e2e"
+    color: theme.backgroundColor
+
+    // Theme Settings Dialog
+    Loader {
+        id: themeSettingsLoader
+        source: "qrc:/imports/CustomComponents/ThemeSettings.qml"
+        active: false
+        onLoaded: {
+            item.open()
+        }
+    }
 
     // Top Menu Bar
     Rectangle {
         id: menuBar
         width: parent.width
         height: parent.height * 0.03
-        color: "#2d2d3a"
+        color: theme.menuBarColor
         Row {
             spacing: 15
             anchors.verticalCenter: parent.verticalCenter
@@ -37,7 +47,7 @@ Window {
                 flat: true
                 contentItem: Text {
                     text: parent.text
-                    color: "#d9d9d9"
+                    color: theme.menuTextColor
                     font.pixelSize: 13
                     font.family: "JetBrains Mono Nerd Font"
                 }
@@ -73,48 +83,57 @@ Window {
                         enabled: fileManager.activeFileIndex >= 0
                         onTriggered: fileManager.closeFile(fileManager.activeFileIndex)
                     }
+
+                    MenuSeparator {}
+
+                    MenuItem {
+                        text: "Theme Settings"
+                        onTriggered: {
+                            themeSettingsLoader.active = true
+                        }
+                    }
                 }
             }
 
             Text {
                 text: "Edit"
-                color: "#d9d9d9"
+                color: theme.menuTextColor
                 font.pixelSize: 13
                 font.family: "JetBrains Mono Nerd Font"
             }
             Text {
                 text: "Selection"
-                color: "#d9d9d9"
+                color: theme.menuTextColor
                 font.pixelSize: 13
                 font.family: "JetBrains Mono Nerd Font"
             }
             Text {
                 text: "View"
-                color: "#d9d9d9"
+                color: theme.menuTextColor
                 font.pixelSize: 13
                 font.family: "JetBrains Mono Nerd Font"
             }
             Text {
                 text: "Go"
-                color: "#d9d9d9"
+                color: theme.menuTextColor
                 font.pixelSize: 13
                 font.family: "JetBrains Mono Nerd Font"
             }
             Text {
                 text: "Run"
-                color: "#d9d9d9"
+                color: theme.menuTextColor
                 font.pixelSize: 13
                 font.family: "JetBrains Mono Nerd Font"
             }
             Text {
                 text: "Terminal"
-                color: "#d9d9d9"
+                color: theme.menuTextColor
                 font.pixelSize: 13
                 font.family: "JetBrains Mono Nerd Font"
             }
             Text {
                 text: "Help"
-                color: "#d9d9d9"
+                color: theme.menuTextColor
                 font.pixelSize: 13
                 font.family: "JetBrains Mono Nerd Font"
             }
@@ -132,7 +151,7 @@ Window {
         // Left sidebar panel
         Rectangle {
             id: sidebarPanel
-            color: "#2f2f3f"
+            color: theme.sidebarColor
             width: 50
             anchors.left: parent.left
             anchors.top: parent.top
@@ -220,6 +239,9 @@ Window {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.verticalCenter: parent.verticalCenter
                     }
+                    onClicked: {
+                        themeSettingsLoader.active = true
+                    }
                 }
             }
         }
@@ -251,11 +273,27 @@ Window {
             title: "New File"
             standardButtons: Dialog.Ok | Dialog.Cancel
 
+            // Theme colors
+            background: Rectangle {
+                color: theme.backgroundColor
+                border.color: theme.sidebarColor
+                border.width: 1
+            }
+
             ColumnLayout {
                 TextField {
                     id: newFileNameField
                     placeholderText: "Enter file name"
                     Layout.fillWidth: true
+
+                    // Style with theme colors
+                    color: theme.textColor
+                    placeholderTextColor: theme.lineNumberColor
+                    background: Rectangle {
+                        color: theme.explorerColor
+                        border.width: 1
+                        border.color: theme.sidebarColor
+                    }
                 }
             }
 
@@ -282,7 +320,7 @@ Window {
                 SplitView.minimumWidth: 0
                 SplitView.maximumWidth: root.width * 0.3
                 visible: fileManager.explorerVisible
-                color: "#252535"
+                color: theme.explorerColor
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -299,7 +337,7 @@ Window {
                             anchors.left: parent.left
                             anchors.leftMargin: 10
                             text: "EXPLORER"
-                            color: "#cccccc"
+                            color: theme.menuTextColor
                             font.pixelSize: 12
                             font.bold: true
                         }
@@ -323,12 +361,24 @@ Window {
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: "No folder opened"
-                                    color: "#cccccc"
+                                    color: theme.menuTextColor
                                 }
 
                                 Button {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: "Open Folder"
+                                    contentItem: Text {
+                                        text: parent.text
+                                        color: theme.textColor
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+                                    background: Rectangle {
+                                        color: parent.hovered ? theme.sidebarColor : theme.explorerColor
+                                        border.width: 1
+                                        border.color: theme.sidebarColor
+                                        radius: 4
+                                    }
                                     onClicked: {
                                         folderDialog.open()
                                     }
@@ -369,7 +419,7 @@ Window {
 
                                     Text {
                                         text: fileName
-                                        color: "#ffffff"
+                                        color: theme.textColor
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
                                     }
@@ -377,6 +427,9 @@ Window {
 
                                 MouseArea {
                                     anchors.fill: parent
+                                    hoverEnabled: true
+                                    onEntered: parent.color = Qt.rgba(theme.sidebarColor.r, theme.sidebarColor.g, theme.sidebarColor.b, 0.3)
+                                    onExited: parent.color = "transparent"
                                     onClicked: {
                                         if (fileIsDir) {
                                             // Navigate to subfolder
@@ -399,7 +452,7 @@ Window {
                 id: mainContentArea
                 SplitView.fillWidth: true
                 SplitView.minimumWidth: 100
-                color: "#1e1e2e"
+                color: theme.backgroundColor
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -410,7 +463,7 @@ Window {
                         id: tabBar
                         Layout.fillWidth: true
                         height: 36
-                        color: "#252535"
+                        color: theme.tabBarColor
                         visible: fileManager.openFiles.length > 0
 
                         ScrollView {
@@ -432,7 +485,7 @@ Window {
                                         id: tabRect
                                         width: tabText.width + 50
                                         height: tabBar.height
-                                        color: index === fileManager.activeFileIndex ? "#1e1e2e" : "#252535"
+                                        color: index === fileManager.activeFileIndex ? theme.activeTabColor : theme.tabBarColor
                                         border.width: 0
 
                                         RowLayout {
@@ -450,7 +503,7 @@ Window {
                                             Text {
                                                 id: tabText
                                                 text: modelData
-                                                color: "#ffffff"
+                                                color: theme.textColor
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
                                             }
@@ -470,6 +523,13 @@ Window {
                                                 flat: true
                                                 text: "×"
                                                 font.pixelSize: 16
+                                                contentItem: Text {
+                                                    text: parent.text
+                                                    color: theme.textColor
+                                                    font.pixelSize: 16
+                                                    horizontalAlignment: Text.AlignHCenter
+                                                    verticalAlignment: Text.AlignVCenter
+                                                }
                                                 onClicked: {
                                                     // Close this tab using FileManager
                                                     fileManager.closeFile(index)
@@ -493,7 +553,7 @@ Window {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        color: "#1e1e2e"
+                        color: theme.backgroundColor
 
                         // Welcome screen when no files are open
                         Item {
@@ -507,7 +567,7 @@ Window {
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: "Welcome to Wisteria"
-                                    color: "#ffffff"
+                                    color: theme.textColor
                                     font.pixelSize: 24
                                     font.bold: true
                                     visible: fileManager.currentFolder === ""
@@ -516,7 +576,7 @@ Window {
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: "Open a folder to get started"
-                                    color: "#cccccc"
+                                    color: theme.menuTextColor
                                     font.pixelSize: 16
                                     visible: fileManager.currentFolder === ""
                                 }
@@ -525,6 +585,18 @@ Window {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: "Open Folder"
                                     visible: fileManager.currentFolder === ""
+                                    contentItem: Text {
+                                        text: parent.text
+                                        color: theme.textColor
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+                                    background: Rectangle {
+                                        color: parent.hovered ? theme.sidebarColor : theme.backgroundColor
+                                        border.width: 1
+                                        border.color: theme.sidebarColor
+                                        radius: 4
+                                    }
                                     onClicked: {
                                         folderDialog.open()
                                     }
@@ -543,12 +615,12 @@ Window {
 
                                 TextArea {
                                     text: fileManager.getFileContent(index)
-                                    color: "#ffffff"
+                                    color: theme.textColor
                                     font.family: "JetBrains Mono Nerd Font"
                                     font.pixelSize: 14
                                     wrapMode: TextEdit.NoWrap
                                     background: Rectangle {
-                                        color: "#1e1e2e"
+                                        color: theme.backgroundColor
                                     }
 
                                     // Line numbers
@@ -559,8 +631,29 @@ Window {
                                     Rectangle {
                                         width: parent.lineNumbersWidth
                                         height: parent.height
-                                        color: "#252535"
+                                        color: theme.explorerColor
                                         anchors.left: parent.left
+
+                                        Column {
+                                            anchors.fill: parent
+                                            anchors.topMargin: 5
+                                            spacing: 0
+
+                                            // This is a simplified approach - a real implementation would need to match line heights
+                                            Repeater {
+                                                model: parent.parent.text.split("\n").length
+
+                                                Text {
+                                                    text: index + 1
+                                                    width: parent.width
+                                                    horizontalAlignment: Text.AlignRight
+                                                    rightPadding: 5
+                                                    color: theme.lineNumberColor
+                                                    font.family: "JetBrains Mono Nerd Font"
+                                                    font.pixelSize: 14
+                                                }
+                                            }
+                                        }
                                     }
 
                                     // Monitor content changes
@@ -587,9 +680,127 @@ Window {
         }
     }
 
+    // Import the ColorDialog for theme customization
+    ColorDialog {
+        id: colorDialog
+        property string targetProperty: ""
+
+        onAccepted: {
+            // Set the color for the targeted property
+            if (targetProperty === "backgroundColor")
+                theme.backgroundColor = colorDialog.color
+            else if (targetProperty === "sidebarColor")
+                theme.sidebarColor = colorDialog.color
+            else if (targetProperty === "explorerColor")
+                theme.explorerColor = colorDialog.color
+            else if (targetProperty === "tabBarColor")
+                theme.tabBarColor = colorDialog.color
+            else if (targetProperty === "menuBarColor")
+                theme.menuBarColor = colorDialog.color
+            else if (targetProperty === "activeTabColor")
+                theme.activeTabColor = colorDialog.color
+            else if (targetProperty === "textColor")
+                theme.textColor = colorDialog.color
+            else if (targetProperty === "menuTextColor")
+                theme.menuTextColor = colorDialog.color
+            else if (targetProperty === "lineNumberColor")
+                theme.lineNumberColor = colorDialog.color
+        }
+    }
+
+    // File dialogs for theme import/export
+    FileDialog {
+        id: importThemeDialog
+        title: "Import Theme"
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["Theme files (*.json)"]
+
+        onAccepted: {
+            theme.importTheme(selectedFile)
+        }
+    }
+
+    FileDialog {
+        id: exportThemeDialog
+        title: "Export Theme"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Theme files (*.json)"]
+
+        onAccepted: {
+            theme.exportTheme(selectedFile)
+        }
+    }
+
+    Dialog {
+        id: newThemeDialog
+        title: "Save Theme As"
+        standardButtons: Dialog.Save | Dialog.Cancel
+
+        // Theme colors
+        background: Rectangle {
+            color: theme.backgroundColor
+            border.color: theme.sidebarColor
+            border.width: 1
+        }
+
+        ColumnLayout {
+            TextField {
+                id: themeNameField
+                placeholderText: "Enter theme name"
+                Layout.fillWidth: true
+
+                // Style with theme colors
+                color: theme.textColor
+                placeholderTextColor: theme.lineNumberColor
+                background: Rectangle {
+                    color: theme.explorerColor
+                    border.width: 1
+                    border.color: theme.sidebarColor
+                }
+            }
+        }
+
+        onAccepted: {
+            if (themeNameField.text.trim() !== "") {
+                theme.saveCurrentTheme(themeNameField.text)
+            }
+        }
+    }
+
+    Dialog {
+        id: deleteThemeConfirmation
+        title: "Delete Theme"
+        standardButtons: Dialog.Yes | Dialog.No
+
+        // Theme colors
+        background: Rectangle {
+            color: theme.backgroundColor
+            border.color: theme.sidebarColor
+            border.width: 1
+        }
+
+        Label {
+            text: "Are you sure you want to delete theme \"" + theme.themeName + "\"?"
+            color: theme.textColor
+            wrapMode: Text.Wrap
+        }
+
+        onAccepted: {
+            theme.deleteTheme(theme.themeName)
+        }
+    }
+
     // Error notification
     Connections {
         target: fileManager
+        function onErrorOccurred(error) {
+            errorDialog.text = error
+            errorDialog.open()
+        }
+    }
+
+    Connections {
+        target: theme
         function onErrorOccurred(error) {
             errorDialog.text = error
             errorDialog.open()
@@ -601,9 +812,17 @@ Window {
         title: "Error"
         property string text: ""
 
+        // Theme colors
+        background: Rectangle {
+            color: theme.backgroundColor
+            border.color: theme.sidebarColor
+            border.width: 1
+        }
+
         Label {
             text: errorDialog.text
             wrapMode: Text.Wrap
+            color: theme.textColor
         }
 
         standardButtons: Dialog.Ok
