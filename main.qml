@@ -613,62 +613,99 @@ Window {
                             Repeater {
                                 model: fileManager.openFiles
 
-                                TextArea {
-                                    text: fileManager.getFileContent(index)
-                                    color: theme.textColor
-                                    font.family: "JetBrains Mono Nerd Font"
-                                    font.pixelSize: 14
-                                    wrapMode: TextEdit.NoWrap
-                                    background: Rectangle {
-                                        color: theme.backgroundColor
-                                    }
-
-                                    // Line numbers
-                                    property int lineNumbersWidth: 40
-                                    leftPadding: lineNumbersWidth + 10
+                                Item {
+                                    // Container for editor and line numbers
 
                                     // Line numbers background
                                     Rectangle {
-                                        width: parent.lineNumbersWidth
+                                        id: lineNumbersArea
+                                        width: 40
                                         height: parent.height
                                         color: theme.explorerColor
                                         anchors.left: parent.left
+                                        z: 1 // Ensure it's above the ScrollView
 
-                                        Column {
+                                        // Line numbers container
+                                        Flickable {
+                                            id: lineNumbersView
                                             anchors.fill: parent
-                                            anchors.topMargin: 5
-                                            spacing: 0
+                                            contentHeight: textEdit.contentHeight
+                                            clip: true
+                                            interactive: false // Don't allow independent scrolling
 
-                                            // This is a simplified approach - a real implementation would need to match line heights
-                                            Repeater {
-                                                model: parent.parent.text.split("\n").length
+                                            Column {
+                                                anchors.fill: parent
+                                                anchors.topMargin: 5
+                                                spacing: 0
 
-                                                Text {
-                                                    text: index + 1
-                                                    width: parent.width
-                                                    horizontalAlignment: Text.AlignRight
-                                                    rightPadding: 5
-                                                    color: theme.lineNumberColor
-                                                    font.family: "JetBrains Mono Nerd Font"
-                                                    font.pixelSize: 14
+                                                Repeater {
+                                                    model: textEdit.text.split("\n").length
+
+                                                    Text {
+                                                        text: index + 1
+                                                        width: parent.width
+                                                        height: textEdit.font.pixelSize + 4 // Match line height
+                                                        horizontalAlignment: Text.AlignRight
+                                                        rightPadding: 5
+                                                        color: theme.lineNumberColor
+                                                        font.family: "JetBrains Mono Nerd Font"
+                                                        font.pixelSize: 14
+                                                    }
                                                 }
                                             }
                                         }
                                     }
 
-                                    // Monitor content changes
-                                    onTextChanged: {
-                                        if (index === fileManager.activeFileIndex) {
-                                            fileManager.setFileContent(index, text)
-                                        }
+                                    // Text editor with scrolling
+                                    ScrollView {
+                                        id: scrollView
+                                        anchors.left: lineNumbersArea.right
+                                        anchors.right: parent.right
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        clip: true
+
+                                        // We need to access the internal Flickable for scroll synchronization
+                                    ScrollBar.vertical.onPositionChanged: {
+                                        lineNumbersView.contentY = ScrollBar.vertical.position * (textEdit.contentHeight - scrollView.height)
                                     }
 
-                                    // Keyboard shortcuts
-                                    Keys.onPressed: function(event) {
-                                        // Ctrl+S for save
-                                        if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_S) {
-                                            fileManager.saveFile(fileManager.activeFileIndex)
-                                            event.accepted = true
+                                        // Styled TextArea
+                                        TextArea {
+                                            id: textEdit
+                                            text: fileManager.getFileContent(index)
+                                            color: theme.textColor
+                                            font.family: "JetBrains Mono Nerd Font"
+                                            font.pixelSize: 14
+                                            wrapMode: TextEdit.NoWrap
+                                            selectByMouse: true
+                                            selectionColor: theme.selectionColor
+                                            leftPadding: 10
+                                            rightPadding: 10
+                                            topPadding: 5
+                                            bottomPadding: 5
+
+                                            // Syntax highlighting could be added here
+
+                                            background: Rectangle {
+                                                color: theme.backgroundColor
+                                            }
+
+                                            // Monitor content changes
+                                            onTextChanged: {
+                                                if (index === fileManager.activeFileIndex) {
+                                                    fileManager.setFileContent(index, text)
+                                                }
+                                            }
+
+                                            // Keyboard shortcuts
+                                            Keys.onPressed: function(event) {
+                                                // Ctrl+S for save
+                                                if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_S) {
+                                                    fileManager.saveFile(fileManager.activeFileIndex)
+                                                    event.accepted = true
+                                                }
+                                            }
                                         }
                                     }
                                 }
