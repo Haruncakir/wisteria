@@ -61,6 +61,10 @@ bool FileManager::openFile(const QString &filePath)
     m_filePaths.append(filePath);
     m_fileNames.append(extractFileName(filePath));
 
+    // Apply syntax highlighting based on file extension
+    QString fileExtension = extractFileExtension(filePath);
+    document->applySyntaxHighlighting(fileExtension);
+
     // Set as active file
     setActiveFileIndex(m_documents.size() - 1);
 
@@ -157,6 +161,11 @@ bool FileManager::saveFileAs(int index, const QString &filePath)
     // Update file path and name
     m_filePaths[index] = filePath;
     m_fileNames[index] = extractFileName(filePath);
+
+    // Apply syntax highlighting based on new file extension
+    QString fileExtension = extractFileExtension(filePath);
+    m_documents[index]->applySyntaxHighlighting(fileExtension);
+
     emit openFilesChanged();
 
     return true;
@@ -292,4 +301,42 @@ bool FileManager::handleDocumentChange(int index)
         return true;
     }
     return false;
+}
+
+QString FileManager::extractFileExtension(const QString &filePath) const
+{
+    return QFileInfo(filePath).suffix();
+}
+
+// New methods for syntax highlighting integration
+
+QTextDocument* FileManager::getTextDocument(int index) const
+{
+    // Validate index
+    if (index < 0 || index >= m_documents.size()) {
+        return nullptr;
+    }
+
+    return m_documents[index]->document();
+}
+
+void FileManager::applySyntaxHighlighting(int index, const QString &fileExtension)
+{
+    // Validate index
+    if (index < 0 || index >= m_documents.size()) {
+        emit errorOccurred(tr("Invalid file index: %1").arg(index));
+        return;
+    }
+
+    m_documents[index]->applySyntaxHighlighting(fileExtension);
+}
+
+QString FileManager::getFileExtension(int index) const
+{
+    // Validate index
+    if (index < 0 || index >= m_filePaths.size()) {
+        return "";
+    }
+
+    return extractFileExtension(m_filePaths[index]);
 }

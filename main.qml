@@ -649,7 +649,7 @@ Window {
                                                         rightPadding: 5
                                                         color: theme.lineNumberColor
                                                         font.family: "JetBrains Mono Nerd Font"
-                                                        font.pixelSize: 14
+                                                        font.pixelSize: textEdit.font.pixelSize - 1 // 14
                                                     }
                                                 }
                                             }
@@ -666,9 +666,9 @@ Window {
                                         clip: true
 
                                         // We need to access the internal Flickable for scroll synchronization
-                                    ScrollBar.vertical.onPositionChanged: {
-                                        lineNumbersView.contentY = ScrollBar.vertical.position * (textEdit.contentHeight - scrollView.height)
-                                    }
+                                        ScrollBar.vertical.onPositionChanged: {
+                                            lineNumbersView.contentY = ScrollBar.vertical.position * (textEdit.contentHeight - scrollView.height)
+                                        }
 
                                         // Styled TextArea
                                         TextArea {
@@ -679,19 +679,59 @@ Window {
                                             font.pixelSize: 14
                                             wrapMode: TextEdit.NoWrap
                                             selectByMouse: true
-                                            selectionColor: theme.selectionColor
+                                            selectionColor: Qt.rgba(0.2, 0.4, 0.6, 0.4) // More IDE-like selection color
                                             leftPadding: 10
                                             rightPadding: 10
                                             topPadding: 5
                                             bottomPadding: 5
 
-                                            // Syntax highlighting could be added here
+                                            // Create a custom syntax highlighter context property in C++
+                                            // This will be accessed via: SyntaxHighlighter *highlighter = new SyntaxHighlighter(textEdit.textDocument);
+
+                                            // Add a cursor line highlight
+                                            Rectangle {
+                                                id: cursorLineHighlight
+                                                width: parent.width
+                                                height: textEdit.font.pixelSize + 4
+                                                color: Qt.rgba(0.2, 0.2, 0.2, 0.2) // Subtle highlight for cursor line
+                                                visible: textEdit.focus
+
+                                                // Position the rectangle at the current cursor line
+                                                y: {
+                                                    let pos = textEdit.cursorRectangle.y
+                                                    return pos
+                                                }
+
+                                                // Update position when cursor moves
+                                                Connections {
+                                                    target: textEdit
+                                                    function onCursorPositionChanged() {
+                                                        cursorLineHighlight.y = textEdit.cursorRectangle.y
+                                                    }
+                                                }
+                                            }
 
                                             background: Rectangle {
                                                 color: theme.backgroundColor
                                             }
 
-                                            // Monitor content changes
+                                            // Add a vertical line at column 80 as a code guide
+                                            Rectangle {
+                                                id: columnGuide
+                                                x: textEdit.font.pixelSize * 0.6 * 80 + textEdit.leftPadding
+                                                width: 1
+                                                height: parent.height
+                                                color: Qt.rgba(0.3, 0.3, 0.3, 0.5)
+                                                visible: true // Make configurable
+                                            }
+
+                                            // Set up the syntax highlighter when the component is created
+                                            Component.onCompleted: {
+                                                // Call C++ method to create and attach highlighter
+                                                fileManager.createSyntaxHighlighter(textEdit.textDocument, getFileExtension(fileManager.openFiles[index]))
+                                            }
+
+                                            // Update the syntax highlighter when the file changes
                                             onTextChanged: {
                                                 if (index === fileManager.activeFileIndex) {
                                                     fileManager.setFileContent(index, text)
@@ -705,8 +745,21 @@ Window {
                                                     fileManager.saveFile(fileManager.activeFileIndex)
                                                     event.accepted = true
                                                 }
+
+                                                // Tab key handling for indentation
+                                                if (event.key === Qt.Key_Tab) {
+                                                    // Insert spaces instead of tab character
+                                                    var spaces = "    " // 4 spaces
+                                                    textEdit.insert(textEdit.cursorPosition, spaces)
+                                                    event.accepted = true
+                                                }
                                             }
                                         }
+                                    }
+
+                                    // Helper function to get file extension
+                                    function getFileExtension(filePath) {
+                                        return filePath.split('.').pop().toLowerCase()
                                     }
                                 }
                             }

@@ -1,9 +1,11 @@
 #include "textdocument.h"
+#include "syntaxhighlighter.h"
 #include <QFile>
 #include <QTextStream>
 #include <QTextCursor>
 #include <QTextBlock>
 #include <QUndoCommand>
+#include <QFileInfo>
 #include <QDebug>
 
 // Text edit command for undo/redo functionality
@@ -53,6 +55,7 @@ TextDocument::TextDocument(QObject *parent)
     , m_document(new QTextDocument(this))
     , m_undoStack(new QUndoStack(this))
     , m_isDirty(false)
+    , m_highlighter(nullptr)
 {
     // Connect signal to detect dirty state
     connect(m_undoStack, &QUndoStack::cleanChanged, this, [this](bool clean) {
@@ -66,6 +69,11 @@ TextDocument::TextDocument(QObject *parent)
 TextDocument::~TextDocument()
 {
     // Cleanup resources
+    if (m_highlighter) {
+        // m_highlighter is automatically deleted when its parent m_document is deleted
+        m_highlighter = nullptr;
+    }
+
     delete m_document;
     delete m_undoStack;
 }
@@ -95,6 +103,10 @@ bool TextDocument::loadFile(const QString &filePath)
     markAsDirty(false);
     updateLineCount();
 
+    // Apply syntax highlighting based on file extension
+    QFileInfo fileInfo(filePath);
+    applySyntaxHighlighting(fileInfo.suffix());
+
     emit contentChanged();
 
     return true;
@@ -122,6 +134,10 @@ bool TextDocument::saveFile(const QString &filePath)
     // Mark as clean
     m_undoStack->setClean();
     markAsDirty(false);
+
+    // If the file extension has changed, update syntax highlighting
+    QFileInfo fileInfo(filePath);
+    applySyntaxHighlighting(fileInfo.suffix());
 
     return true;
 }
@@ -244,6 +260,21 @@ int TextDocument::getLineLength(int lineNumber) const
 
     QTextBlock block = m_document->findBlockByLineNumber(lineNumber);
     return block.length();
+}
+
+void TextDocument::applySyntaxHighlighting(const QString &fileExtension)
+{
+    // Remove any existing highlighter
+    if (m_highlighter) {
+        delete m_highlighter;
+        m_highlighter = nullptr;
+    }
+
+    // Create a new syntax highlighter for the document
+    m_highlighter = new SyntaxHighlighter(m_document);
+
+    // Set the language based on file extension
+    m_highlighter->setLanguage(fileExtension);
 }
 
 void TextDocument::updateLineCount()

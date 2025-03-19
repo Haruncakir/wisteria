@@ -1,6 +1,5 @@
 #ifndef FILEMANAGER_H
 #define FILEMANAGER_H
-
 #include <QObject>
 #include <QStringList>
 #include <QSharedPointer>
@@ -30,6 +29,11 @@ public:
     Q_INVOKABLE QString getFilePath(int index) const;
     Q_INVOKABLE void setFileContent(int index, const QString &content);
     Q_INVOKABLE bool createNewFile(const QString &fileName);
+
+    // New methods for syntax highlighting integration
+    Q_INVOKABLE QTextDocument* getTextDocument(int index) const;
+    Q_INVOKABLE void applySyntaxHighlighting(int index, const QString &fileExtension);
+    Q_INVOKABLE QString getFileExtension(int index) const;
 
     // Property accessors
     QStringList openFiles() const;
@@ -62,6 +66,6 @@ private:
     bool fileExists(const QString &filePath) const;
     int findFileIndex(const QString &filePath) const;
     bool handleDocumentChange(int index);
+    QString extractFileExtension(const QString &filePath) const;
 };
-
 #endif // FILEMANAGER_H

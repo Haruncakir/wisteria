@@ -3,6 +3,7 @@ QT += quick
 SOURCES += \
         filemanager.cpp \
         main.cpp \
+        syntaxhighlighter.cpp \
         textdocument.cpp \
         theme.cpp
 
@@ -24,5 +25,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     filemanager.h \
+    syntaxhighlighter.h \
     textdocument.h \
     theme.h
