@@ -4,6 +4,8 @@
 #include <QDir>
 #include <QTextStream>
 #include <QDebug>
+#include <QQuickTextDocument>
+#include "syntaxhighlighter.h"
 
 FileManager::FileManager(QObject *parent)
     : QObject(parent)
@@ -322,25 +324,22 @@ QTextDocument* FileManager::getTextDocument(int index) const
 
 void FileManager::createSyntaxHighlighter(QObject* textDocument, const QString &fileExtension)
 {
-    // This method will be called from QML, where textDocument is passed from TextArea.textDocument
-    // We need to convert it to a QTextDocument
-    QTextDocument* document = qobject_cast<QTextDocument*>(textDocument);
-
-    if (!document) {
-        emit errorOccurred(tr("Invalid text document"));
+    // Convert QML's QQuickTextDocument to QTextDocument
+    QQuickTextDocument *qmlTextDoc = qobject_cast<QQuickTextDocument*>(textDocument);
+    if (!qmlTextDoc) {
+        emit errorOccurred(tr("Invalid text document object"));
         return;
     }
 
-    // Find the corresponding TextDocument in our list
-    for (auto &textDoc : m_documents) {
-        if (textDoc->document() == document) {
-            // Apply syntax highlighting to that document
-            textDoc->applySyntaxHighlighting(fileExtension);
-            return;
-        }
+    QTextDocument *document = qmlTextDoc->textDocument();
+    if (!document) {
+        emit errorOccurred(tr("Failed to get QTextDocument"));
+        return;
     }
 
-    emit errorOccurred(tr("Failed to apply syntax highlighting"));
+    // Create syntax highlighter directly on the QML TextArea's document
+    SyntaxHighlighter *highlighter = new SyntaxHighlighter(document);
+    highlighter->setLanguage(fileExtension);
 }
 
 void FileManager::applySyntaxHighlighting(int index, const QString &fileExtension)

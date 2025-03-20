@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.impl
 import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Dialogs
@@ -731,8 +732,9 @@ Window {
 
                                             // Set up the syntax highlighter when the component is created
                                             Component.onCompleted: {
-                                                // Create and attach highlighter - pass the textDocument to C++
-                                                fileManager.applySyntaxHighlighting(index, fileManager.getFileExtension(index))
+                                                // Create syntax highlighter for this text document
+                                                fileManager.createSyntaxHighlighter(textEdit.textDocument,
+                                                                                  fileManager.getFileExtension(index))
                                             }
 
                                             // Keyboard shortcuts

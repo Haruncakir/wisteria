@@ -104,8 +104,8 @@ bool TextDocument::loadFile(const QString &filePath)
     updateLineCount();
 
     // Apply syntax highlighting based on file extension
-    QFileInfo fileInfo(filePath);
-    applySyntaxHighlighting(fileInfo.suffix());
+    // QFileInfo fileInfo(filePath);
+    // applySyntaxHighlighting(fileInfo.suffix());
 
     emit contentChanged();
 
@@ -136,8 +136,8 @@ bool TextDocument::saveFile(const QString &filePath)
     markAsDirty(false);
 
     // If the file extension has changed, update syntax highlighting
-    QFileInfo fileInfo(filePath);
-    applySyntaxHighlighting(fileInfo.suffix());
+    //QFileInfo fileInfo(filePath);
+    //applySyntaxHighlighting(fileInfo.suffix());
 
     return true;
 }
