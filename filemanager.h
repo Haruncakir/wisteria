@@ -33,6 +33,7 @@ public:
     // New methods for syntax highlighting integration
     Q_INVOKABLE QTextDocument* getTextDocument(int index) const;
     Q_INVOKABLE void applySyntaxHighlighting(int index, const QString &fileExtension);
+    Q_INVOKABLE void createSyntaxHighlighter(QObject* textDocument, const QString &fileExtension);
     Q_INVOKABLE QString getFileExtension(int index) const;
 
     // Property accessors

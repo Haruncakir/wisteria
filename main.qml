@@ -685,9 +685,6 @@ Window {
                                             topPadding: 5
                                             bottomPadding: 5
 
-                                            // Create a custom syntax highlighter context property in C++
-                                            // This will be accessed via: SyntaxHighlighter *highlighter = new SyntaxHighlighter(textEdit.textDocument);
-
                                             // Add a cursor line highlight
                                             Rectangle {
                                                 id: cursorLineHighlight
@@ -725,17 +722,17 @@ Window {
                                                 visible: true // Make configurable
                                             }
 
-                                            // Set up the syntax highlighter when the component is created
-                                            Component.onCompleted: {
-                                                // Call C++ method to create and attach highlighter
-                                                fileManager.createSyntaxHighlighter(textEdit.textDocument, getFileExtension(fileManager.openFiles[index]))
-                                            }
-
-                                            // Update the syntax highlighter when the file changes
+                                            // Monitor content changes
                                             onTextChanged: {
                                                 if (index === fileManager.activeFileIndex) {
                                                     fileManager.setFileContent(index, text)
                                                 }
+                                            }
+
+                                            // Set up the syntax highlighter when the component is created
+                                            Component.onCompleted: {
+                                                // Create and attach highlighter - pass the textDocument to C++
+                                                fileManager.applySyntaxHighlighting(index, fileManager.getFileExtension(index))
                                             }
 
                                             // Keyboard shortcuts

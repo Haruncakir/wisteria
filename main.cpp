@@ -3,6 +3,7 @@
 #include <QQmlContext>
 #include <QDir>
 #include <QQmlFileSelector>
+#include <QTextDocument>
 #include "filemanager.h"
 #include "theme.h"
 
@@ -30,6 +31,7 @@ int main(int argc, char *argv[])
 
     // Register QML types (if we were using custom C++ QML types)
     // qmlRegisterType<Theme>("CustomComponents", 1, 0, "ThemeSettings");
+    qmlRegisterType<QTextDocument>("com.wisteria.TextDocument", 1, 0, "QTextDocument");
 
     // Expose FileManager and Theme to QML
     engine.rootContext()->setContextProperty("fileManager", &fileManager);
