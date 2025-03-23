@@ -28,3 +28,6 @@ HEADERS += \
     syntaxhighlighter.h \
     textdocument.h \
     theme.h
+
+DISTFILES += \
+    README.md

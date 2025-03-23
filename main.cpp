@@ -7,12 +7,15 @@
 #include "filemanager.h"
 #include "theme.h"
 
+
 int main(int argc, char *argv[])
 {
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
     QGuiApplication app(argc, argv);
+
+    // QQuickStyle::setStyle("Fusion");
 
     // Set up QML file import paths
     QDir appDir(app.applicationDirPath());
@@ -48,35 +51,3 @@ int main(int argc, char *argv[])
 
     return app.exec();
 }
-
-/*
-int main(int argc, char *argv[])
-{
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-#endif
-    QGuiApplication app(argc, argv);
-
-    FileManager fileManager;
-    Theme theme;
-
-    QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("fileManager", &fileManager);
-    engine.rootContext()->setContextProperty("theme", &theme);
-    qmlRegisterType<Theme>("CustomComponents", 1, 0, "ThemeSettings");
-    const QUrl url(QStringLiteral("qrc:/wisteria/main.qml"));
-    QObject::connect(
-        &engine,
-        &QQmlApplicationEngine::objectCreated,
-        &app,
-        [url](QObject *obj, const QUrl &objUrl) {
-            if (!obj && url == objUrl)
-                QCoreApplication::exit(-1);
-        },
-        Qt::QueuedConnection);
-    engine.load(url);
-
-    return app.exec();
-}
-
-*/

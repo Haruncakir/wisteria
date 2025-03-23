@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import QtQuick.Dialogs
 
@@ -9,6 +10,10 @@ Dialog {
     width: 600
     height: 500
     modal: true
+
+    Component.onCompleted: {
+        ApplicationWindow.style = "Fusion"
+    }
 
     // Center in parent
     x: (parent.width - width) / 2

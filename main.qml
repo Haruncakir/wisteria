@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Fusion
 import QtQuick.Controls.impl
 import QtQuick.Window
 import QtQuick.Layouts
@@ -484,7 +485,7 @@ Window {
 
                                     Rectangle {
                                         id: tabRect
-                                        width: tabText.width + 50
+                                        width: tabText.implicitWidth + 50
                                         height: tabBar.height
                                         color: index === fileManager.activeFileIndex ? theme.activeTabColor : theme.tabBarColor
                                         border.width: 0
@@ -533,6 +534,7 @@ Window {
                                                 }
                                                 onClicked: {
                                                     // Close this tab using FileManager
+                                                    console.log("Closing file at index:", index);
                                                     fileManager.closeFile(index)
                                                 }
                                             }
