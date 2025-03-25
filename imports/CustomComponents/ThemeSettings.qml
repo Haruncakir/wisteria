@@ -12,7 +12,7 @@ Dialog {
     modal: true
 
     Component.onCompleted: {
-        ApplicationWindow.style = "Fusion"
+        ApplicationWindow.style = "Basic"
     }
 
     // Center in parent
@@ -27,172 +27,184 @@ Dialog {
     }
 
     // Main content
-    ColumnLayout {
+    ScrollView {
         anchors.fill: parent
-        spacing: 10
+        clip: true
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
-        // Theme selection
-        GroupBox {
-            title: "Theme Selection"
-            Layout.fillWidth: true
+        ColumnLayout {
+            anchors.fill: parent
+            width: themeSettingsDialog.width - 20
+            spacing: 10
 
-            background: Rectangle {
-                color: "transparent"
-                border.color: theme.sidebarColor
-                border.width: 1
-            }
+            // Theme selection
+            GroupBox {
+                title: "Theme Selection"
+                Layout.fillWidth: true
 
-            label: Label {
-                text: parent.title
-                color: theme.textColor
-                font.bold: true
-            }
-
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 10
-
-                RowLayout {
-                    Layout.fillWidth: true
-
-                    Label {
-                        text: "Current Theme:"
-                        color: theme.textColor
-                    }
-
-                    ComboBox {
-                        id: themeSelector
-                        Layout.fillWidth: true
-                        model: theme.availableThemes
-                        currentIndex: model.indexOf(theme.themeName)
-
-                        contentItem: Text {
-                            text: themeSelector.displayText
-                            color: theme.textColor
-                            verticalAlignment: Text.AlignVCenter
-                            leftPadding: 10
-                        }
-
-                        background: Rectangle {
-                            color: themeSelector.pressed ? theme.sidebarColor : theme.explorerColor
-                            border.color: theme.sidebarColor
-                            border.width: 1
-                            radius: 2
-                        }
-
-                        popup.background: Rectangle {
-                            color: theme.backgroundColor
-                            border.color: theme.sidebarColor
-                            border.width: 1
-                        }
-
-                        delegate: ItemDelegate {
-                            width: themeSelector.width
-                            contentItem: Text {
-                                text: modelData
-                                color: theme.textColor
-                                elide: Text.ElideRight
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                            highlighted: themeSelector.highlightedIndex === index
-                            background: Rectangle {
-                                color: highlighted ? theme.sidebarColor : "transparent"
-                            }
-                        }
-
-                        onActivated: {
-                            theme.loadTheme(model[currentIndex])
-                        }
-                    }
-
-                    Button {
-                        text: "New"
-                        contentItem: Text {
-                            text: parent.text
-                            color: theme.textColor
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        background: Rectangle {
-                            color: parent.hovered ? theme.sidebarColor : theme.explorerColor
-                            border.width: 1
-                            border.color: theme.sidebarColor
-                            radius: 4
-                        }
-                        onClicked: newThemeDialog.open()
-                    }
-
-                    Button {
-                        text: "Delete"
-                        enabled: theme.themeName !== "Default" && theme.themeName !== "Light" && theme.themeName !== "Dracula"
-                        contentItem: Text {
-                            text: parent.text
-                            color: parent.enabled ? theme.textColor : theme.lineNumberColor
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        background: Rectangle {
-                            color: parent.enabled && parent.hovered ? theme.sidebarColor : theme.explorerColor
-                            border.width: 1
-                            border.color: theme.sidebarColor
-                            radius: 4
-                        }
-                        onClicked: deleteThemeConfirmation.open()
-                    }
+                background: Rectangle {
+                    color: "transparent"
+                    border.color: theme.sidebarColor
+                    border.width: 1
                 }
 
-                RowLayout {
-                    Layout.fillWidth: true
+                label: Label {
+                    text: parent.title
+                    color: theme.textColor
+                    font.bold: true
+                }
 
-                    Button {
-                        text: "Import Theme"
-                        contentItem: Text {
-                            text: parent.text
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 10
+
+                    RowLayout {
+                        Layout.fillWidth: true
+
+                        Label {
+                            text: "Current Theme:"
                             color: theme.textColor
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
                         }
-                        background: Rectangle {
-                            color: parent.hovered ? theme.sidebarColor : theme.explorerColor
-                            border.width: 1
-                            border.color: theme.sidebarColor
-                            radius: 4
+
+                        ComboBox {
+                            id: themeSelector
+                            Layout.fillWidth: true
+                            model: theme.availableThemes
+                            // currentIndex: model.indexOf(theme.themeName)
+
+                            currentIndex: {
+                                let idx = model.indexOf(theme.themeName);
+                                return idx >= 0 ? idx : 0;
+                            }
+
+                            contentItem: Text {
+                                text: themeSelector.displayText
+                                color: theme.textColor
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: 10
+                            }
+
+                            background: Rectangle {
+                                color: themeSelector.pressed ? theme.sidebarColor : theme.explorerColor
+                                border.color: theme.sidebarColor
+                                border.width: 1
+                                radius: 2
+                            }
+
+                            popup.background: Rectangle {
+                                color: theme.backgroundColor
+                                border.color: theme.sidebarColor
+                                border.width: 1
+                            }
+
+                            delegate: ItemDelegate {
+                                width: themeSelector.width
+                                contentItem: Text {
+                                    text: modelData
+                                    color: theme.textColor
+                                    elide: Text.ElideRight
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                                highlighted: themeSelector.highlightedIndex === index
+                                background: Rectangle {
+                                    color: highlighted ? theme.sidebarColor : "transparent"
+                                }
+                            }
+
+                            onActivated: {
+                                theme.loadTheme(model[currentIndex])
+                            }
                         }
-                        onClicked: importThemeDialog.open()
+
+                        Button {
+                            text: "New"
+                            contentItem: Text {
+                                text: parent.text
+                                color: theme.textColor
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            background: Rectangle {
+                                color: parent.hovered ? theme.sidebarColor : theme.explorerColor
+                                border.width: 1
+                                border.color: theme.sidebarColor
+                                radius: 4
+                            }
+                            onClicked: newThemeDialog.open()
+                        }
+
+                        Button {
+                            text: "Delete"
+                            enabled: theme.themeName !== "Default" && theme.themeName !== "Light" && theme.themeName !== "Dracula"
+                            contentItem: Text {
+                                text: parent.text
+                                color: parent.enabled ? theme.textColor : theme.lineNumberColor
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            background: Rectangle {
+                                color: parent.enabled && parent.hovered ? theme.sidebarColor : theme.explorerColor
+                                border.width: 1
+                                border.color: theme.sidebarColor
+                                radius: 4
+                            }
+                            onClicked: deleteThemeConfirmation.open()
+                        }
                     }
 
-                    Button {
-                        text: "Export Theme"
-                        contentItem: Text {
-                            text: parent.text
-                            color: theme.textColor
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        background: Rectangle {
-                            color: parent.hovered ? theme.sidebarColor : theme.explorerColor
-                            border.width: 1
-                            border.color: theme.sidebarColor
-                            radius: 4
-                        }
-                        onClicked: exportThemeDialog.open()
-                    }
+                    RowLayout {
+                        Layout.fillWidth: true
 
-                    Button {
-                        text: "Reset to Default"
-                        contentItem: Text {
-                            text: parent.text
-                            color: theme.textColor
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                        Button {
+                            text: "Import Theme"
+                            contentItem: Text {
+                                text: parent.text
+                                color: theme.textColor
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            background: Rectangle {
+                                color: parent.hovered ? theme.sidebarColor : theme.explorerColor
+                                border.width: 1
+                                border.color: theme.sidebarColor
+                                radius: 4
+                            }
+                            onClicked: importThemeDialog.open()
                         }
-                        background: Rectangle {
-                            color: parent.hovered ? theme.sidebarColor : theme.explorerColor
-                            border.width: 1
-                            border.color: theme.sidebarColor
-                            radius: 4
+
+                        Button {
+                            text: "Export Theme"
+                            contentItem: Text {
+                                text: parent.text
+                                color: theme.textColor
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            background: Rectangle {
+                                color: parent.hovered ? theme.sidebarColor : theme.explorerColor
+                                border.width: 1
+                                border.color: theme.sidebarColor
+                                radius: 4
+                            }
+                            onClicked: exportThemeDialog.open()
                         }
-                        onClicked: theme.resetToDefault()
+
+                        Button {
+                            text: "Reset to Default"
+                            contentItem: Text {
+                                text: parent.text
+                                color: theme.textColor
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            background: Rectangle {
+                                color: parent.hovered ? theme.sidebarColor : theme.explorerColor
+                                border.width: 1
+                                border.color: theme.sidebarColor
+                                radius: 4
+                            }
+                            onClicked: theme.resetToDefault()
+                        }
                     }
                 }
             }
@@ -650,8 +662,8 @@ Dialog {
 
                 Label { text: "Text:"; color: theme.textColor }
                 Rectangle {
-                    width: 100
-                    height: 20
+                    implicitWidth: 100
+                    implicitHeight: 20
                     color: theme.textColor
                     border.width: 1
                     border.color: theme.sidebarColor
@@ -797,6 +809,16 @@ Dialog {
                 border.color: theme.sidebarColor
                 radius: 4
             }
+        }
+    }
+
+    // Define ColorDialog if missing
+    ColorDialog {
+        id: colorDialog
+        property string targetProperty
+        onAccepted: {
+            if (targetProperty)
+                theme[targetProperty] = selectedColor
         }
     }
 }

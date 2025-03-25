@@ -6,7 +6,7 @@
 #include <QTextDocument>
 #include "filemanager.h"
 #include "theme.h"
-
+#include "filetreemodel.h"
 
 int main(int argc, char *argv[])
 {
@@ -27,6 +27,9 @@ int main(int argc, char *argv[])
     // Create the Theme instance
     Theme theme;
 
+    // Create the FileTreeModel instance
+    FileTreeModel fileTreeModel;
+
     QQmlApplicationEngine engine;
 
     // Add the application's QML directory to the import path
@@ -35,10 +38,12 @@ int main(int argc, char *argv[])
     // Register QML types (if we were using custom C++ QML types)
     // qmlRegisterType<Theme>("CustomComponents", 1, 0, "ThemeSettings");
     qmlRegisterType<QTextDocument>("com.wisteria.TextDocument", 1, 0, "QTextDocument");
+    qmlRegisterType<FileTreeModel>("com.wisteria.FileTreeModel", 1, 0, "FileTreeModel");
 
     // Expose FileManager and Theme to QML
     engine.rootContext()->setContextProperty("fileManager", &fileManager);
     engine.rootContext()->setContextProperty("theme", &theme);
+    engine.rootContext()->setContextProperty("fileTreeModel", &fileTreeModel);
 
     // Load the main QML file
     const QUrl url(QStringLiteral("qrc:/wisteria/main.qml"));

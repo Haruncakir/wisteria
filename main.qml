@@ -6,6 +6,7 @@ import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import Qt.labs.folderlistmodel
+import com.wisteria.FileTreeModel 1.0
 
 Window {
     id: root
@@ -253,8 +254,9 @@ Window {
             id: folderDialog
             title: "Select a folder"
             onAccepted: {
-                console.log("Selected folder: ", selectedFolder)
-                fileManager.currentFolder = selectedFolder
+                let localPath = selectedFolder.toString().replace("file:///", "");
+                console.log("Selected folder: ", localPath);
+                fileManager.currentFolder = localPath;
             }
             onRejected: {
                 console.log("Folder selection canceled.")
@@ -334,14 +336,43 @@ Window {
                         height: 30
                         color: "transparent"
 
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: parent.left
+                        RowLayout {
+                            anchors.fill: parent
                             anchors.leftMargin: 10
-                            text: "EXPLORER"
-                            color: theme.menuTextColor
-                            font.pixelSize: 12
-                            font.bold: true
+                            spacing: 5
+
+                            Text {
+                                text: "EXPLORER"
+                                color: theme.menuTextColor
+                                font.pixelSize: 12
+                                font.bold: true
+                                Layout.fillWidth: true
+                            }
+
+                            // Add a refresh button
+                            Button {
+                                implicitWidth: 20
+                                implicitHeight: 20
+                                visible: fileManager.currentFolder !== ""
+
+                                background: Rectangle {
+                                    color: "transparent"
+                                }
+
+                                contentItem: Text {
+                                    text: "↻"  // Refresh icon
+                                    color: theme.menuTextColor
+                                    font.pixelSize: 14
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+
+                                onClicked: {
+                                    // Refresh the file tree model
+                                    fileTreeModel.rootPath = ""
+                                    fileTreeModel.rootPath = fileManager.currentFolder
+                                }
+                            }
                         }
                     }
 
@@ -389,57 +420,81 @@ Window {
                         }
 
                         // Show when a folder is opened
-                        ListView {
-                            id: fileListView
+                        ScrollView {
+                            id: folderContentView
                             anchors.fill: parent
                             visible: fileManager.currentFolder !== ""
                             clip: true
 
-                            model: FolderListModel {
-                                id: folderModel
-                                folder: fileManager.currentFolder !== "" ? fileManager.currentFolder : ""
-                                showDirs: true
-                                showDotAndDotDot: false
-                                sortField: FolderListModel.Name
+                            // File tree model - defined outside the TreeView to access it from the refresh button
+                            FileTreeModel {
+                                id: fileTreeModel
+                                rootPath: fileManager.currentFolder
                             }
 
-                            delegate: Rectangle {
-                                width: fileListView.width
-                                height: 24
-                                color: "transparent"
+                            TreeView {
+                                id: fileTreeView
+                                anchors.fill: parent
+                                boundsMovement: Flickable.StopAtBounds
+                                clip: true
+                                model: fileTreeModel
 
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: 10
-                                    spacing: 5
+                                delegate: TreeViewDelegate {
+                                    id: treeDelegate
+                                    indentation: 16
 
-                                    Image {
-                                        Layout.preferredWidth: 16
-                                        Layout.preferredHeight: 16
-                                        source: fileIsDir ? "qrc:/UI/Assets/folder.svg" : "qrc:/UI/Assets/file.svg"
-                                    }
+                                    contentItem: Rectangle {
+                                        color: "transparent"
+                                        implicitWidth: row.implicitWidth
+                                        implicitHeight: 24
 
-                                    Text {
-                                        text: fileName
-                                        color: theme.textColor
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                    }
-                                }
+                                        RowLayout {
+                                            id: row
+                                            anchors.fill: parent
+                                            anchors.leftMargin: 4
+                                            spacing: 4
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    onEntered: parent.color = Qt.rgba(theme.sidebarColor.r, theme.sidebarColor.g, theme.sidebarColor.b, 0.3)
-                                    onExited: parent.color = "transparent"
-                                    onClicked: {
-                                        if (fileIsDir) {
-                                            // Navigate to subfolder
-                                            fileManager.currentFolder = fileURL.toString().slice(7) // Remove "file://"
-                                        } else {
-                                            // Open File
-                                            var fullPath = fileManager.currentFolder + "/" + fileName
-                                            fileManager.openFile(fullPath.toString().slice(8))
+                                            // Folder expansion indicator (triangle)
+                                            Image {
+                                                Layout.preferredWidth: 12
+                                                Layout.preferredHeight: 12
+                                                visible: model.isDir && model.hasChildren // Show only if directory has children
+                                                source: treeDelegate.expanded ? "qrc:/UI/Assets/arrow-down.svg" : "qrc:/UI/Assets/arrow-right.svg"
+                                                opacity: model.isDir ? 1.0 : 0.0
+                                            }
+
+
+                                            // File/folder icon
+                                            Image {
+                                                Layout.preferredWidth: 16
+                                                Layout.preferredHeight: 16
+                                                source: model.isDir ? "qrc:/UI/Assets/folder.svg" : "qrc:/UI/Assets/file.svg"
+                                            }
+
+                                            // File/folder name
+                                            Text {
+                                                text: model.fileName
+                                                color: theme.textColor
+                                                Layout.fillWidth: true
+                                                elide: Text.ElideRight
+                                            }
+                                        }
+
+                                        // Hover effect
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            onEntered: parent.color = Qt.rgba(theme.sidebarColor.r, theme.sidebarColor.g, theme.sidebarColor.b, 0.3)
+                                            onExited: parent.color = "transparent"
+                                            onClicked: {
+                                                if (model.isDir) {
+                                                    // Toggle expansion of the folder
+                                                    treeDelegate.expanded = !treeDelegate.expanded
+                                                } else {
+                                                    // Open file - using the full path from the model
+                                                    fileManager.openFile(model.filePath)
+                                                }
+                                            }
                                         }
                                     }
                                 }

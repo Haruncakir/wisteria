@@ -11,5 +11,7 @@
         <file>UI/Assets/file.svg</file>
         <file>imports/CustomComponents/qmldir</file>
         <file>imports/CustomComponents/ThemeSettings.qml</file>
+        <file>UI/Assets/arrow-down.svg</file>
+        <file>UI/Assets/arrow-right.svg</file>
     </qresource>
 </RCC>

@@ -167,7 +167,7 @@ QStringList Theme::availableThemes() const
 bool Theme::saveCurrentTheme(const QString &name)
 {
     // Don't allow overwriting built-in themes
-    if (name == "Default" || name == "Dark" || name == "Light") {
+    if (name == "Default" || name == "Light" || name == "Dracula") {
         emit errorOccurred(tr("Cannot overwrite built-in theme: %1").arg(name));
         return false;
     }
@@ -225,7 +225,7 @@ bool Theme::loadTheme(const QString &name)
 bool Theme::deleteTheme(const QString &name)
 {
     // Don't allow deleting built-in themes
-    if (name == "Default" || name == "Dark" || name == "Light") {
+    if (name == "Default" || name == "Light" || name == "Dracula") {
         emit errorOccurred(tr("Cannot delete built-in theme: %1").arg(name));
         return false;
     }
@@ -387,7 +387,7 @@ void Theme::loadSavedThemes()
         QString name = m_settings.value("name").toString();
 
         // Skip built-in themes (they're already loaded)
-        if (name == "Default" || name == "Dark" || name == "Light" || name == "Dracula") {
+        if (name == "Default" || name == "Light" || name == "Dracula") {
             continue;
         }
 
@@ -418,7 +418,7 @@ void Theme::saveThemes()
         i.next();
 
         // Skip built-in themes
-        if (i.key() == "Default" || i.key() == "Dark" || i.key() == "Light" || i.key() == "Dracula") {
+        if (i.key() == "Default" || i.key() == "Light" || i.key() == "Dracula") {
             continue;
         }
 
